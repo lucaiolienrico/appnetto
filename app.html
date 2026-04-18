@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Netto</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+
+<!-- ─── Loading overlay ──────────────────────────────────── -->
+<div id="loading-overlay">
+  <div class="loading-logo">Netto</div>
+  <div class="loading-dot"></div>
+</div>
+
+<!-- ─── Toast container ──────────────────────────────────── -->
+<div id="toast-container"></div>
+
+<!-- ═══════════════════════════════════════════════════════
+     APP LAYOUT
+════════════════════════════════════════════════════════ -->
+<div class="app-layout">
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-logo">Netto</div>
+    <div class="header-user">
+      <span class="user-name" id="user-name"></span>
+      <span class="user-plan" id="user-plan"></span>
+      <button class="btn-logout" id="logout-btn">Esci</button>
+    </div>
+  </header>
+
+  <!-- Filtri globali -->
+  <div class="filters-bar">
+    <div class="period-pills">
+      <button class="period-btn" data-period="today">Oggi</button>
+      <button class="period-btn" data-period="week">7gg</button>
+      <button class="period-btn active" data-period="month">Mese</button>
+      <button class="period-btn" data-period="year">Anno</button>
+    </div>
+    <select class="property-select" id="property-filter">
+      <option value="">Tutte le proprietà</option>
+    </select>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-net-card">
+      <div class="kpi-label">Profitto Netto</div>
+      <div class="kpi-value kpi-net positive" id="kpi-net">€ 0,00</div>
+      <div class="kpi-margin" id="kpi-margin">Margine: 0%</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Ricavi</div>
+      <div class="kpi-value kpi-small" id="kpi-income">€ 0,00</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Costi</div>
+      <div class="kpi-value kpi-small" id="kpi-expenses">€ 0,00</div>
+    </div>
+    <div class="kpi-card" style="grid-column: 1 / -1;">
+      <div class="kpi-label">Ritenuta (cedolare)</div>
+      <div class="kpi-value kpi-small" id="kpi-tax">€ 0,00</div>
+    </div>
+  </div>
+
+  <!-- Tab navigation -->
+  <nav class="tabs-nav">
+    <button class="tab-btn active" data-tab="oggi">Movimenti</button>
+    <button class="tab-btn" data-tab="andamento">Andamento</button>
+    <button class="tab-btn" data-tab="case">Proprietà</button>
+  </nav>
+
+  <!-- TAB: Movimenti recenti -->
+  <div class="tab-content active" id="tab-oggi">
+    <div class="section-label">Ultimi movimenti</div>
+    <div class="tx-list" id="recent-list">
+      <div class="empty-state">
+        <span>Nessun movimento ancora</span>
+        <small>Premi <strong>+</strong> per registrare il primo incasso</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Andamento grafico -->
+  <div class="tab-content" id="tab-andamento">
+    <div class="section-label" style="margin-bottom: 14px;">Andamento mensile</div>
+    <div class="chart-container">
+      <canvas id="trend-chart"></canvas>
+    </div>
+  </div>
+
+  <!-- TAB: Gestione proprietà -->
+  <div class="tab-content" id="tab-case">
+    <div class="section-label" style="margin-bottom: 14px;">Le tue proprietà</div>
+    <div class="prop-list" id="property-list"></div>
+    <button class="btn-add-property" onclick="openAddPropertyModal()">
+      + Aggiungi proprietà
+    </button>
+  </div>
+
+</div><!-- /app-layout -->
+
+<!-- ─── FAB + ──────────────────────────────────────────────── -->
+<button class="fab" onclick="openAddSheet()" title="Aggiungi movimento">+</button>
+
+<!-- ═══════════════════════════════════════════════════════
+     BOTTOM SHEET: Aggiungi movimento
+════════════════════════════════════════════════════════ -->
+<div id="add-sheet" class="add-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Nuovo movimento</div>
+
+  <!-- Tipo: Incasso / Costo -->
+  <div class="kind-toggle">
+    <button class="kind-btn active" data-kind="income"  onclick="setKind('income')">💰 Incasso</button>
+    <button class="kind-btn"        data-kind="expense" onclick="setKind('expense')">📋 Costo</button>
+  </div>
+
+  <!-- Importo -->
+  <div class="amount-input-wrap">
+    <span class="amount-currency">€</span>
+    <input
+      class="amount-input"
+      id="add-amount"
+      type="number"
+      inputmode="decimal"
+      min="0.01"
+      step="0.01"
+      placeholder="0,00"
+    />
+  </div>
+
+  <!-- Categoria + Data -->
+  <div class="sheet-row">
+    <select class="sheet-select" id="add-category"></select>
+    <input  class="sheet-date-input" id="add-date" type="date" />
+  </div>
+
+  <!-- Proprietà -->
+  <div class="sheet-full">
+    <select class="sheet-select" id="add-property"></select>
+  </div>
+
+  <!-- Nota opzionale -->
+  <div class="sheet-full">
+    <textarea class="sheet-note" id="add-note" placeholder="Nota opzionale (ospite, riferimento, ecc.)"></textarea>
+  </div>
+
+  <button class="btn-save" id="save-btn">Salva</button>
+</div>
+<div id="add-sheet-overlay" class="sheet-overlay"></div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL: Aggiungi proprietà
+════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="property-modal">
+  <div class="modal">
+    <div class="modal-title">Nuova proprietà</div>
+    <div class="modal-sub">Aggiungi un B&B, appartamento o stanza.</div>
+    <div class="modal-form">
+      <input  class="modal-input"  id="prop-name"    type="text" placeholder="Nome (es. Bilocale Centro)" required />
+      <input  class="modal-input"  id="prop-address" type="text" placeholder="Indirizzo (opzionale)" />
+      <select class="modal-select" id="prop-tax">
+        <option value="none">Nessuna cedolare</option>
+        <option value="cedolare_21">Cedolare secca 21%</option>
+        <option value="cedolare_10">Cedolare secca 10%</option>
+      </select>
+    </div>
+    <div class="modal-actions" style="margin-top:20px;">
+      <button class="btn-cancel" onclick="closePropertyModal()">Annulla</button>
+      <button class="btn-primary" id="save-prop-btn" onclick="saveProperty()" style="flex:2">Aggiungi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL: Paywall Pro
+════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="paywall-modal">
+  <div class="modal">
+    <div class="paywall-badge">✦ NETTO PRO</div>
+    <div class="modal-title">Sblocca proprietà illimitate</div>
+    <div class="modal-sub">Il piano gratuito include 1 proprietà. Passa a Pro per gestire tutto il tuo portafoglio.</div>
+
+    <ul class="paywall-feature-list">
+      <li>Proprietà illimitate</li>
+      <li>Report mensile e annuale completi</li>
+      <li>Export PDF per il commercialista</li>
+      <li>Storico illimitato</li>
+    </ul>
+
+    <div class="checkout-options">
+      <button class="btn-checkout btn-checkout-monthly" id="checkout-monthly" onclick="startCheckout('monthly')">
+        €7,99 / mese
+      </button>
+      <button class="btn-checkout btn-checkout-yearly" id="checkout-yearly" onclick="startCheckout('yearly')">
+        €69 / anno — risparmia il 28%
+      </button>
+    </div>
+    <div class="checkout-note">Pagamento sicuro via Stripe · Cancella quando vuoi</div>
+
+    <button class="btn-cancel" style="width:100%;margin-top:16px;" onclick="closePaywall()">
+      Continua con il piano gratuito
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCRIPTS
+════════════════════════════════════════════════════════ -->
+<!-- CDN libs -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+<!-- App scripts (ordine importante) -->
+<script src="assets/js/config.js"></script>
+<script src="assets/js/domain.js"></script>
+<script src="assets/js/db.js"></script>
+<script src="assets/js/app.js"></script>
+
+</body>
+</html>

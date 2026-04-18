@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Netto — Accedi</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body class="auth-page">
+
+  <div class="auth-card">
+    <div class="auth-logo">Netto</div>
+    <div class="auth-tagline">Incassi meno costi. In tempo reale.</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="showTab('login')">Accedi</button>
+      <button class="auth-tab" id="tab-register" onclick="showTab('register')">Registrati</button>
+    </div>
+
+    <!-- Login -->
+    <form class="auth-form" id="form-login" onsubmit="handleLogin(event)">
+      <div class="auth-error" id="login-error"></div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" id="login-email" placeholder="tu@email.it" required autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password" />
+      </div>
+      <button class="btn-primary" type="submit" id="login-btn">Accedi</button>
+    </form>
+
+    <!-- Registrazione -->
+    <form class="auth-form" id="form-register" style="display:none" onsubmit="handleRegister(event)">
+      <div class="auth-error" id="register-error"></div>
+      <div class="form-group">
+        <label class="form-label">Nome</label>
+        <input class="form-input" type="text" id="reg-name" placeholder="Mario Rossi" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" id="reg-email" placeholder="tu@email.it" required autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" id="reg-password" placeholder="Min. 8 caratteri" required autocomplete="new-password" minlength="8" />
+      </div>
+      <button class="btn-primary" type="submit" id="register-btn">Crea account gratuito</button>
+    </form>
+  </div>
+
+  <!-- Supabase + Config -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="assets/js/config.js"></script>
+
+  <script>
+    const _supabase = supabase.createClient(CONFIG.supabase.url, CONFIG.supabase.anonKey);
+
+    // Se già autenticato, vai direttamente all'app
+    (async () => {
+      const { data: { session } } = await _supabase.auth.getSession();
+      if (session) window.location.href = 'app.html';
+    })();
+
+    function showTab(tab) {
+      document.getElementById('form-login').style.display    = tab === 'login'    ? 'flex' : 'none';
+      document.getElementById('form-register').style.display = tab === 'register' ? 'flex' : 'none';
+      document.getElementById('tab-login').classList.toggle('active',    tab === 'login');
+      document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn   = document.getElementById('login-btn');
+      const errEl = document.getElementById('login-error');
+      btn.disabled    = true;
+      btn.textContent = 'Accesso in corso...';
+      errEl.classList.remove('visible');
+
+      const { error } = await _supabase.auth.signInWithPassword({
+        email:    document.getElementById('login-email').value.trim(),
+        password: document.getElementById('login-password').value,
+      });
+
+      if (error) {
+        const msgs = {
+          'Invalid login credentials': 'Email o password non corretti.',
+          'Email not confirmed':       'Conferma la tua email prima di accedere.',
+        };
+        errEl.textContent = msgs[error.message] || 'Errore di accesso. Riprova.';
+        errEl.classList.add('visible');
+        btn.disabled    = false;
+        btn.textContent = 'Accedi';
+        return;
+      }
+
+      window.location.href = 'app.html';
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const btn   = document.getElementById('register-btn');
+      const errEl = document.getElementById('register-error');
+      btn.disabled    = true;
+      btn.textContent = 'Creazione account...';
+      errEl.classList.remove('visible');
+
+      const name  = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const pass  = document.getElementById('reg-password').value;
+
+      const { error } = await _supabase.auth.signUp({
+        email, password: pass,
+        options: { data: { display_name: name } }
+      });
+
+      if (error) {
+        const msgs = {
+          'User already registered': 'Email già registrata. Accedi invece.',
+          'Password should be at least 6 characters': 'La password deve essere di almeno 6 caratteri.',
+        };
+        errEl.textContent = msgs[error.message] || 'Errore nella registrazione. Riprova.';
+        errEl.classList.add('visible');
+        btn.disabled    = false;
+        btn.textContent = 'Crea account gratuito';
+        return;
+      }
+
+      // Auto-login dopo registrazione (Supabase lo fa se autoconfirm è abilitato)
+      const { data: { session } } = await _supabase.auth.getSession();
+      if (session) {
+        window.location.href = 'app.html';
+      } else {
+        errEl.style.borderColor = '#22c55e';
+        errEl.style.background  = 'rgba(34,197,94,0.1)';
+        errEl.style.color       = '#86efac';
+        errEl.textContent       = '✓ Controlla la tua email per confermare l\'account.';
+        errEl.classList.add('visible');
+        btn.disabled    = false;
+        btn.textContent = 'Crea account gratuito';
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# Mai committare chiavi reali
+# Ricorda: config.js contiene chiavi Stripe/Supabase
+# Se usi variabili d'ambiente, aggiungi .env qui
+
+.DS_Store
+Thumbs.db
+*.log
+node_modules/
+.supabase/
