@@ -1,146 +1,731 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Netto — Accedi</title>
-  <link rel="stylesheet" href="assets/css/style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InvestPro — Analisi Immobiliare</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ── Variables ─────────────────────────────────────────── */
+:root{
+  --bg:#0f172a; --card:#1e293b; --input:#020617;
+  --border:#334155; --border-f:#10b981;
+  --text:#f8fafc; --muted:#94a3b8; --dim:#475569;
+  --green:#10b981; --green-l:rgba(16,185,129,.12);
+  --red:#ef4444;   --red-l:rgba(239,68,68,.12);
+  --blue:#3b82f6;  --blue-l:rgba(59,130,246,.12);
+  --amber:#f59e0b; --amber-l:rgba(245,158,11,.12);
+  --r:10px; --r-sm:6px;
+  --sh:0 4px 24px rgba(0,0,0,.4);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
+button{cursor:pointer;font-family:inherit}
+input,select{font-family:inherit}
+
+/* ── Auth overlay ───────────────────────────────────────── */
+#auth-overlay{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  z-index:9999;padding:24px;
+}
+#auth-overlay.hidden{display:none}
+.auth-box{
+  width:100%;max-width:380px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:40px 36px;
+}
+.auth-logo{font-size:1.8rem;font-weight:800;color:var(--green);letter-spacing:-.04em;margin-bottom:4px}
+.auth-sub{font-size:.82rem;color:var(--muted);margin-bottom:32px}
+.auth-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:24px}
+.atab{background:none;border:none;padding:8px 0;margin-right:20px;font-size:.88rem;color:var(--muted);font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px;transition:.15s}
+.atab.on{color:var(--text);border-bottom-color:var(--green)}
+.aform{display:flex;flex-direction:column;gap:12px}
+.aform.hidden{display:none}
+.alabel{font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;display:block}
+.ainput{width:100%;background:var(--input);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 14px;color:var(--text);font-size:.92rem;outline:none;transition:.15s}
+.ainput:focus{border-color:var(--green)}
+.abtn{background:var(--green);border:none;border-radius:var(--r-sm);padding:13px;color:#000;font-size:.92rem;font-weight:700;transition:.15s}
+.abtn:hover{opacity:.88}
+.abtn:disabled{opacity:.4;cursor:not-allowed}
+.aerr{background:var(--red-l);border:1px solid rgba(239,68,68,.3);border-radius:var(--r-sm);padding:10px 14px;font-size:.82rem;color:#fca5a5;display:none}
+.aerr.on{display:block}
+
+/* ── App layout ────────────────────────────────────────── */
+#app{max-width:1100px;margin:0 auto;padding:24px 20px 60px}
+#app.hidden{display:none}
+
+/* ── Header ────────────────────────────────────────────── */
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px}
+.logo{font-size:1.4rem;font-weight:800;color:var(--green);letter-spacing:-.03em}
+.hdr-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.proj-input{background:transparent;border:none;border-bottom:1px dashed var(--border);color:var(--text);font-size:.95rem;font-weight:600;padding:4px 8px;width:180px;outline:none;transition:.15s}
+.proj-input:focus{border-color:var(--green)}
+.hbtn{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--r-sm);font-size:.82rem;font-weight:600;border:1px solid var(--border);background:transparent;color:var(--muted);transition:.15s}
+.hbtn:hover{color:var(--text);border-color:var(--muted)}
+.hbtn.pri{background:var(--green);border-color:var(--green);color:#000}
+.hbtn.pri:hover{opacity:.88}
+.hbtn.danger{border-color:rgba(239,68,68,.4);color:var(--red)}
+
+/* ── Mode toggle ───────────────────────────────────────── */
+.mode-wrap{margin-bottom:24px}
+.mode-pills{display:inline-flex;background:var(--card);border:1px solid var(--border);border-radius:30px;padding:4px;gap:4px}
+.mpill{background:none;border:none;padding:9px 22px;border-radius:26px;font-size:.85rem;font-weight:600;color:var(--muted);transition:.15s}
+.mpill.on{background:var(--green);color:#000}
+
+/* ── KPI bar ────────────────────────────────────────────── */
+.kpi-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px}
+.kpi-l{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px}
+.kpi-v{font-size:1.55rem;font-weight:800;color:var(--text);letter-spacing:-.03em;line-height:1}
+.kpi-v.pos{color:var(--green)} .kpi-v.neg{color:var(--red)}
+.kpi-s{font-size:.72rem;color:var(--dim);margin-top:4px}
+
+/* ── Grid ───────────────────────────────────────────────── */
+.grid{display:grid;grid-template-columns:1.4fr 1fr;gap:20px;align-items:start}
+.col{display:flex;flex-direction:column;gap:20px}
+.col-r{position:sticky;top:24px}
+
+/* ── Card ───────────────────────────────────────────────── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.ct{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--green)}
+.cb{padding:20px}
+
+/* ── Form ───────────────────────────────────────────────── */
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.frow:last-child{margin-bottom:0}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg.full{grid-column:1/-1}
+.fl{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.iw{position:relative;display:flex;align-items:center}
+.ip,.is{position:absolute;font-size:.85rem;color:var(--dim);pointer-events:none}
+.ip{left:12px} .is{right:12px}
+.fi{
+  width:100%;padding:10px 12px;
+  background:var(--input);border:1px solid var(--border);
+  border-radius:var(--r-sm);color:var(--text);font-size:.9rem;font-weight:500;
+  outline:none;transition:.15s;-webkit-appearance:none;
+}
+.fi:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-l)}
+.fi.pl{padding-left:28px} .fi.pr{padding-right:28px}
+.fi[readonly]{background:var(--green-l);color:var(--green);font-weight:700}
+.fi[readonly].blue{background:var(--blue-l);color:var(--blue)}
+
+/* Tax buttons */
+.tax-btns{display:flex;gap:6px;flex-wrap:wrap}
+.tbtn{flex:1;min-width:70px;padding:8px 10px;background:var(--input);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--muted);font-size:.78rem;font-weight:600;transition:.15s}
+.tbtn:hover{border-color:var(--green);color:var(--text)}
+.tbtn.on{background:var(--green);border-color:var(--green);color:#000}
+
+/* ── Results panel ──────────────────────────────────────── */
+.res-grid{display:flex;flex-direction:column;gap:10px}
+.res-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.res-row:last-child{border:none}
+.res-key{font-size:.82rem;color:var(--muted)}
+.res-val{font-size:.95rem;font-weight:700;color:var(--text)}
+.res-val.pos{color:var(--green)} .res-val.neg{color:var(--red)}
+.res-divider{height:1px;background:var(--border);margin:4px 0}
+.big-result{background:var(--green-l);border:1px solid rgba(16,185,129,.3);border-radius:var(--r);padding:20px;text-align:center;margin-top:8px}
+.big-result.neg{background:var(--red-l);border-color:rgba(239,68,68,.3)}
+.br-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
+.br-val{font-size:2.2rem;font-weight:800;color:var(--green);letter-spacing:-.04em;line-height:1}
+.br-val.neg{color:var(--red)}
+.br-sub{font-size:.78rem;color:var(--muted);margin-top:4px}
+
+/* ── Sensitivity ────────────────────────────────────────── */
+.sens-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.sens-card{background:var(--input);border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center}
+.sens-card.best{border-color:var(--green);background:var(--green-l)}
+.sens-card.worst{border-color:var(--red);background:var(--red-l)}
+.sens-occ{font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.sens-cf{font-size:1.1rem;font-weight:800;color:var(--text)}
+.sens-cf.pos{color:var(--green)} .sens-cf.neg{color:var(--red)}
+.sens-lbl{font-size:.68rem;color:var(--dim);margin-top:4px}
+
+/* ── Hidden ─────────────────────────────────────────────── */
+.hidden{display:none!important}
+
+/* ── Toast ──────────────────────────────────────────────── */
+#toasts{position:fixed;top:16px;right:16px;z-index:8000;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 16px;font-size:.82rem;max-width:280px;opacity:0;transform:translateX(20px);transition:.22s ease;pointer-events:none}
+.toast.on{opacity:1;transform:none}
+.toast.ok{border-left:3px solid var(--green)}
+.toast.err{border-left:3px solid var(--red)}
+.toast.info{border-left:3px solid var(--blue)}
+
+/* ── Responsive ─────────────────────────────────────────── */
+@media(max-width:900px){
+  .grid{grid-template-columns:1fr}
+  .col-r{position:static}
+  .kpi-bar{grid-template-columns:1fr 1fr}
+}
+@media(max-width:500px){
+  .kpi-bar{grid-template-columns:1fr 1fr}
+  .frow{grid-template-columns:1fr}
+  .sens-grid{grid-template-columns:1fr}
+}
+</style>
 </head>
-<body class="auth-page">
+<body>
 
-  <div class="auth-card">
-    <div class="auth-logo">Netto</div>
-    <div class="auth-tagline">Incassi meno costi. In tempo reale.</div>
-
+<!-- ═══════ AUTH ═══════════════════════════════════════════ -->
+<div id="auth-overlay">
+  <div class="auth-box">
+    <div class="auth-logo">InvestPro</div>
+    <div class="auth-sub">Analisi finanziaria immobiliare</div>
     <div class="auth-tabs">
-      <button class="auth-tab active" id="tab-login" onclick="showTab('login')">Accedi</button>
-      <button class="auth-tab" id="tab-register" onclick="showTab('register')">Registrati</button>
+      <button class="atab on" onclick="showTab('login')">Accedi</button>
+      <button class="atab" onclick="showTab('reg')">Registrati</button>
     </div>
 
     <!-- Login -->
-    <form class="auth-form" id="form-login" onsubmit="handleLogin(event)">
-      <div class="auth-error" id="login-error"></div>
-      <div class="form-group">
-        <label class="form-label">Email</label>
-        <input class="form-input" type="email" id="login-email" placeholder="tu@email.it" required autocomplete="email" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <input class="form-input" type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password" />
-      </div>
-      <button class="btn-primary" type="submit" id="login-btn">Accedi</button>
-    </form>
+    <div class="aform" id="form-login">
+      <div class="aerr" id="login-err"></div>
+      <div><label class="alabel">Email</label><input class="ainput" type="email" id="li-email" placeholder="tu@email.it" autocomplete="email"></div>
+      <div><label class="alabel">Password</label><input class="ainput" type="password" id="li-pass" placeholder="••••••••" autocomplete="current-password"></div>
+      <button class="abtn" id="li-btn" onclick="doLogin()">Accedi</button>
+    </div>
 
     <!-- Registrazione -->
-    <form class="auth-form" id="form-register" style="display:none" onsubmit="handleRegister(event)">
-      <div class="auth-error" id="register-error"></div>
-      <div class="form-group">
-        <label class="form-label">Nome</label>
-        <input class="form-input" type="text" id="reg-name" placeholder="Mario Rossi" required />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Email</label>
-        <input class="form-input" type="email" id="reg-email" placeholder="tu@email.it" required autocomplete="email" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <input class="form-input" type="password" id="reg-password" placeholder="Min. 8 caratteri" required autocomplete="new-password" minlength="8" />
-      </div>
-      <button class="btn-primary" type="submit" id="register-btn">Crea account gratuito</button>
-    </form>
+    <div class="aform hidden" id="form-reg">
+      <div class="aerr" id="reg-err"></div>
+      <div><label class="alabel">Nome</label><input class="ainput" type="text" id="rg-name" placeholder="Mario Rossi"></div>
+      <div><label class="alabel">Email</label><input class="ainput" type="email" id="rg-email" placeholder="tu@email.it" autocomplete="email"></div>
+      <div><label class="alabel">Password</label><input class="ainput" type="password" id="rg-pass" placeholder="Min. 8 caratteri" autocomplete="new-password" minlength="8"></div>
+      <button class="abtn" id="rg-btn" onclick="doRegister()">Crea account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ APP ════════════════════════════════════════════ -->
+<div id="app" class="hidden">
+  <div id="toasts"></div>
+
+  <!-- Header -->
+  <div class="hdr">
+    <div class="logo">InvestPro</div>
+    <div class="hdr-right">
+      <input class="proj-input" id="proj-name" type="text" value="Nuova Analisi" placeholder="Nome progetto…">
+      <button class="hbtn" onclick="exportExcel()">📊 Excel</button>
+      <button class="hbtn pri" onclick="saveProject()">💾 Salva</button>
+      <button class="hbtn danger" onclick="doLogout()">Esci</button>
+    </div>
   </div>
 
-  <!-- Supabase + Config -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="assets/js/config.js"></script>
+  <!-- Mode toggle -->
+  <div class="mode-wrap">
+    <div class="mode-pills">
+      <button class="mpill on" id="pill-rent" onclick="setMode('rent')">🏠 Messa a Reddito</button>
+      <button class="mpill"    id="pill-flip" onclick="setMode('flip')">🔄 Trading (Flip)</button>
+    </div>
+  </div>
 
-  <script>
-    const _supabase = supabase.createClient(CONFIG.supabase.url, CONFIG.supabase.anonKey);
+  <!-- KPI bar -->
+  <div class="kpi-bar">
+    <div class="kpi"><div class="kpi-l">Investimento</div><div class="kpi-v" id="k-invest">€ 0</div><div class="kpi-s">Equity + costi</div></div>
+    <div class="kpi"><div class="kpi-l">ROI Annuo</div><div class="kpi-v" id="k-roi">0%</div><div class="kpi-s">Cash on Cash</div></div>
+    <div class="kpi"><div class="kpi-l" id="k-cf-lbl">Cashflow / Mese</div><div class="kpi-v" id="k-cf">€ 0</div><div class="kpi-s">Netto post-debito</div></div>
+    <div class="kpi"><div class="kpi-l">Break-even</div><div class="kpi-v" id="k-be">—</div><div class="kpi-s">Recupero equity</div></div>
+  </div>
 
-    // Se già autenticato, vai direttamente all'app
-    (async () => {
-      const { data: { session } } = await _supabase.auth.getSession();
-      if (session) window.location.href = 'app.html';
-    })();
+  <!-- Main grid -->
+  <div class="grid">
+    <div class="col">
 
-    function showTab(tab) {
-      document.getElementById('form-login').style.display    = tab === 'login'    ? 'flex' : 'none';
-      document.getElementById('form-register').style.display = tab === 'register' ? 'flex' : 'none';
-      document.getElementById('tab-login').classList.toggle('active',    tab === 'login');
-      document.getElementById('tab-register').classList.toggle('active', tab === 'register');
-    }
+      <!-- Acquisizione -->
+      <div class="card">
+        <div class="ch"><div class="ct">🏢 Dati Acquisizione</div></div>
+        <div class="cb">
+          <div class="frow">
+            <div class="fg"><label class="fl">Prezzo Acquisto</label><div class="iw"><span class="ip">€</span><input class="fi pl" type="number" id="price" value="250000" min="0" step="1000" oninput="calc()"></div></div>
+            <div class="fg"><label class="fl">Ristrutturazione</label><div class="iw"><span class="ip">€</span><input class="fi pl" type="number" id="reno" value="25000" min="0" step="1000" oninput="calc()"></div></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Costi Notarili/Agenzia</label><div class="iw"><span class="ip">€</span><input class="fi pl" type="number" id="closing" value="8000" min="0" step="500" oninput="calc()"></div></div>
+            <div class="fg"><label class="fl">Tassa Soggiorno/notte</label><div class="iw"><span class="ip">€</span><input class="fi pl" type="number" id="city-tax" value="2" min="0" step="0.5" oninput="calc()"></div></div>
+          </div>
+        </div>
+      </div>
 
-    async function handleLogin(e) {
-      e.preventDefault();
-      const btn   = document.getElementById('login-btn');
-      const errEl = document.getElementById('login-error');
-      btn.disabled    = true;
-      btn.textContent = 'Accesso in corso...';
-      errEl.classList.remove('visible');
+      <!-- Finanziamento -->
+      <div class="card">
+        <div class="ch"><div class="ct">💰 Struttura Finanziaria</div></div>
+        <div class="cb">
+          <div class="frow">
+            <div class="fg"><label class="fl">LTV</label><div class="iw"><input class="fi pr" type="number" id="ltv" value="80" min="0" max="100" step="5" oninput="calc()"><span class="is">%</span></div></div>
+            <div class="fg"><label class="fl">Tasso Interesse Annuo</label><div class="iw"><input class="fi pr" type="number" id="rate" value="3.5" min="0" max="20" step="0.1" oninput="calc()"><span class="is">%</span></div></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Durata Mutuo</label><div class="iw"><input class="fi pr" type="number" id="years" value="25" min="1" max="40" step="1" oninput="calc()"><span class="is">anni</span></div></div>
+            <div class="fg"><label class="fl">Rivalutazione Annua</label><div class="iw"><input class="fi pr" type="number" id="apprec" value="2" min="0" max="10" step="0.5" oninput="calc()"><span class="is">%</span></div></div>
+          </div>
+          <div class="frow" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+            <div class="fg"><label class="fl">Rata Mensile</label><div class="iw"><span class="ip">€</span><input class="fi pl" id="mort-pay" readonly></div></div>
+            <div class="fg"><label class="fl">Equity Necessaria</label><div class="iw"><span class="ip">€</span><input class="fi pl blue" id="equity-req" readonly></div></div>
+          </div>
+        </div>
+      </div>
 
-      const { error } = await _supabase.auth.signInWithPassword({
-        email:    document.getElementById('login-email').value.trim(),
-        password: document.getElementById('login-password').value,
-      });
+      <!-- Parametri affitto -->
+      <div class="card" id="sec-rent">
+        <div class="ch"><div class="ct">📅 Parametri Affitto</div></div>
+        <div class="cb">
+          <div class="frow">
+            <div class="fg"><label class="fl">ADR (Tariffa Media/notte)</label><div class="iw"><span class="ip">€</span><input class="fi pl" type="number" id="adr" value="120" min="0" step="5" oninput="calc()"></div></div>
+            <div class="fg"><label class="fl">Occupazione</label><div class="iw"><input class="fi pr" type="number" id="occ" value="70" min="0" max="100" step="5" oninput="calc()"><span class="is">%</span></div></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Commissione OTA</label><div class="iw"><input class="fi pr" type="number" id="ota" value="15" min="0" max="30" step="0.5" oninput="calc()"><span class="is">%</span></div></div>
+            <div class="fg"><label class="fl">Ospiti medi/prenotazione</label><div class="iw"><input class="fi" type="number" id="guests" value="2" min="1" step="1" oninput="calc()"></div></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Costi Fissi / Mese</label><div class="iw"><span class="ip">€</span><input class="fi pl" type="number" id="fixed" value="200" min="0" step="10" oninput="calc()"></div></div>
+            <div class="fg"><label class="fl">Costi Variabili / Notte</label><div class="iw"><span class="ip">€</span><input class="fi pl" type="number" id="varco" value="15" min="0" step="5" oninput="calc()"></div></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Manutenzione / Mese</label><div class="iw"><span class="ip">€</span><input class="fi pl" type="number" id="maint" value="100" min="0" step="10" oninput="calc()"></div></div>
+            <div class="fg"><label class="fl">Vacancy / Rischio</label><div class="iw"><input class="fi pr" type="number" id="vac" value="5" min="0" max="30" step="1" oninput="calc()"><span class="is">%</span></div></div>
+          </div>
+          <div class="frow">
+            <div class="fg full">
+              <label class="fl">Aliquota Fiscale</label>
+              <div class="tax-btns">
+                <button class="tbtn" onclick="setTax(0,this)">Nessuna</button>
+                <button class="tbtn on" onclick="setTax(21,this)">Cedolare 21%</button>
+                <button class="tbtn" onclick="setTax(10,this)">Cedolare 10%</button>
+                <button class="tbtn" onclick="setTax(26,this)">IRPEF 26%</button>
+              </div>
+              <div class="iw" style="margin-top:8px"><input class="fi pr" type="number" id="tax-rate" value="21" min="0" max="50" step="1" oninput="calc()"><span class="is">%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      if (error) {
-        const msgs = {
-          'Invalid login credentials': 'Email o password non corretti.',
-          'Email not confirmed':       'Conferma la tua email prima di accedere.',
-        };
-        errEl.textContent = msgs[error.message] || 'Errore di accesso. Riprova.';
-        errEl.classList.add('visible');
-        btn.disabled    = false;
-        btn.textContent = 'Accedi';
-        return;
-      }
+      <!-- Parametri flip -->
+      <div class="card hidden" id="sec-flip">
+        <div class="ch"><div class="ct">🔄 Parametri Flip</div></div>
+        <div class="cb">
+          <div class="frow">
+            <div class="fg"><label class="fl">Prezzo di Vendita</label><div class="iw"><span class="ip">€</span><input class="fi pl" type="number" id="flip-price" value="320000" min="0" step="5000" oninput="calc()"></div></div>
+            <div class="fg"><label class="fl">Durata Operazione</label><div class="iw"><input class="fi pr" type="number" id="flip-months" value="9" min="1" step="1" oninput="calc()"><span class="is">mesi</span></div></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Commissione Agenzia Vendita</label><div class="iw"><input class="fi pr" type="number" id="flip-ag" value="3" min="0" max="10" step="0.5" oninput="calc()"><span class="is">%</span></div></div>
+            <div class="fg"><label class="fl">Costi Holding / Mese</label><div class="iw"><span class="ip">€</span><input class="fi pl" type="number" id="flip-hold" value="500" min="0" step="100" oninput="calc()"></div></div>
+          </div>
+          <div class="frow">
+            <div class="fg full"><label class="fl">Tassa Plus-valenza</label><div class="iw"><input class="fi pr" type="number" id="flip-tax" value="26" min="0" max="50" step="1" oninput="calc()"><span class="is">%</span></div></div>
+          </div>
+        </div>
+      </div>
 
-      window.location.href = 'app.html';
-    }
+    </div><!-- /col left -->
 
-    async function handleRegister(e) {
-      e.preventDefault();
-      const btn   = document.getElementById('register-btn');
-      const errEl = document.getElementById('register-error');
-      btn.disabled    = true;
-      btn.textContent = 'Creazione account...';
-      errEl.classList.remove('visible');
+    <!-- ── Col right (risultati) ── -->
+    <div class="col col-r">
 
-      const name  = document.getElementById('reg-name').value.trim();
-      const email = document.getElementById('reg-email').value.trim();
-      const pass  = document.getElementById('reg-password').value;
+      <!-- Risultati affitto -->
+      <div class="card" id="res-rent">
+        <div class="ch"><div class="ct">📊 Risultati Affitto</div></div>
+        <div class="cb">
+          <div class="res-grid">
+            <div class="res-row"><span class="res-key">Ricavi lordi / anno</span><span class="res-val pos" id="r-gross">€ 0</span></div>
+            <div class="res-row"><span class="res-key">Commissioni OTA</span><span class="res-val neg" id="r-ota">€ 0</span></div>
+            <div class="res-row"><span class="res-key">Tassa di soggiorno</span><span class="res-val neg" id="r-citytax">€ 0</span></div>
+            <div class="res-row"><span class="res-key">Costi operativi</span><span class="res-val neg" id="r-op">€ 0</span></div>
+            <div class="res-row"><span class="res-key">Tasse (cedolare/IRPEF)</span><span class="res-val neg" id="r-tax">€ 0</span></div>
+            <div class="res-row"><span class="res-key">Rata mutuo / anno</span><span class="res-val neg" id="r-mort">€ 0</span></div>
+            <div class="res-row"><span class="res-key">Notti occupate / anno</span><span class="res-val" id="r-nights">0</span></div>
+            <div class="res-row"><span class="res-key">MOL / Mese</span><span class="res-val" id="r-mol">€ 0</span></div>
+            <div class="res-row"><span class="res-key">Utile netto / notte</span><span class="res-val" id="r-nightly">€ 0</span></div>
+          </div>
+          <div class="big-result" id="big-cf">
+            <div class="br-label">Cashflow Mensile Netto</div>
+            <div class="br-val" id="br-cf">€ 0</div>
+            <div class="br-sub" id="br-cf-sub">—</div>
+          </div>
+        </div>
+      </div>
 
-      const { error } = await _supabase.auth.signUp({
-        email, password: pass,
-        options: { data: { display_name: name } }
-      });
+      <!-- Risultati flip -->
+      <div class="card hidden" id="res-flip">
+        <div class="ch"><div class="ct">📊 Risultati Flip</div></div>
+        <div class="cb">
+          <div class="res-grid">
+            <div class="res-row"><span class="res-key">Prezzo vendita</span><span class="res-val" id="f-sell">€ 0</span></div>
+            <div class="res-row"><span class="res-key">Costi totali acquisizione</span><span class="res-val neg" id="f-acq">€ 0</span></div>
+            <div class="res-row"><span class="res-key">Commissione agenzia</span><span class="res-val neg" id="f-ag">€ 0</span></div>
+            <div class="res-row"><span class="res-key">Costi holding</span><span class="res-val neg" id="f-hold">€ 0</span></div>
+            <div class="res-row"><span class="res-key">Profitto lordo</span><span class="res-val pos" id="f-gross">€ 0</span></div>
+            <div class="res-row"><span class="res-key">Tasse plus-valenza</span><span class="res-val neg" id="f-tax">€ 0</span></div>
+          </div>
+          <div class="big-result" id="big-flip">
+            <div class="br-label">Profitto Netto</div>
+            <div class="br-val" id="br-flip">€ 0</div>
+            <div class="br-sub" id="br-flip-sub">—</div>
+          </div>
+        </div>
+      </div>
 
-      if (error) {
-        const msgs = {
-          'User already registered': 'Email già registrata. Accedi invece.',
-          'Password should be at least 6 characters': 'La password deve essere di almeno 6 caratteri.',
-        };
-        errEl.textContent = msgs[error.message] || 'Errore nella registrazione. Riprova.';
-        errEl.classList.add('visible');
-        btn.disabled    = false;
-        btn.textContent = 'Crea account gratuito';
-        return;
-      }
+      <!-- Analisi di sensitività (solo affitto) -->
+      <div class="card" id="sec-sens">
+        <div class="ch"><div class="ct">🎯 Analisi Scenari</div></div>
+        <div class="cb">
+          <div class="sens-grid">
+            <div class="sens-card worst">
+              <div class="sens-occ" id="sens-p-occ">50% occ.</div>
+              <div class="sens-cf neg" id="sens-p-cf">€ 0</div>
+              <div class="sens-lbl">Pessimistico</div>
+            </div>
+            <div class="sens-card">
+              <div class="sens-occ" id="sens-m-occ">65% occ.</div>
+              <div class="sens-cf" id="sens-m-cf">€ 0</div>
+              <div class="sens-lbl">Moderato</div>
+            </div>
+            <div class="sens-card best">
+              <div class="sens-occ" id="sens-o-occ">85% occ.</div>
+              <div class="sens-cf pos" id="sens-o-cf">€ 0</div>
+              <div class="sens-lbl">Ottimistico</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      // Auto-login dopo registrazione (Supabase lo fa se autoconfirm è abilitato)
-      const { data: { session } } = await _supabase.auth.getSession();
-      if (session) {
-        window.location.href = 'app.html';
-      } else {
-        errEl.style.borderColor = '#22c55e';
-        errEl.style.background  = 'rgba(34,197,94,0.1)';
-        errEl.style.color       = '#86efac';
-        errEl.textContent       = '✓ Controlla la tua email per confermare l\'account.';
-        errEl.classList.add('visible');
-        btn.disabled    = false;
-        btn.textContent = 'Crea account gratuito';
-      }
-    }
-  </script>
+    </div><!-- /col right -->
+  </div><!-- /grid -->
+</div><!-- /app -->
+
+<!-- ═══════ SCRIPTS ═════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+// ── CONFIG ─────────────────────────────────────────────────
+const CONFIG = {
+  supabase: {
+    url:     'https://amzjefyegfxkpzjifynj.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtemplZnllZ2Z4a3B6amlmeW5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1Mjk4NTcsImV4cCI6MjA5MjEwNTg1N30.RDnpaTFtSkx2wmI5vWScef2x9CFgyGxPoAvXy-1lNrE'
+  }
+};
+const sb = supabase.createClient(CONFIG.supabase.url, CONFIG.supabase.anonKey);
+
+// ── STATO ──────────────────────────────────────────────────
+let mode = 'rent'; // 'rent' | 'flip'
+let currentUser = null;
+
+// ── AUTH ───────────────────────────────────────────────────
+sb.auth.onAuthStateChange((event, session) => {
+  currentUser = session?.user ?? null;
+  if (currentUser) {
+    document.getElementById('auth-overlay').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    calc();
+  } else {
+    document.getElementById('auth-overlay').classList.remove('hidden');
+    document.getElementById('app').classList.add('hidden');
+  }
+});
+
+function showTab(tab) {
+  document.querySelectorAll('.atab').forEach((b,i) => b.classList.toggle('on', (tab==='login'&&i===0)||(tab==='reg'&&i===1)));
+  document.getElementById('form-login').classList.toggle('hidden', tab !== 'login');
+  document.getElementById('form-reg').classList.toggle('hidden', tab !== 'reg');
+}
+
+async function doLogin() {
+  const btn = document.getElementById('li-btn');
+  const err = document.getElementById('login-err');
+  const email = document.getElementById('li-email').value.trim();
+  const pass  = document.getElementById('li-pass').value;
+  btn.disabled = true; btn.textContent = '...'; err.classList.remove('on');
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) {
+    err.textContent = 'Email o password non corretti.';
+    err.classList.add('on');
+  }
+  btn.disabled = false; btn.textContent = 'Accedi';
+}
+
+async function doRegister() {
+  const btn  = document.getElementById('rg-btn');
+  const err  = document.getElementById('reg-err');
+  const name  = document.getElementById('rg-name').value.trim();
+  const email = document.getElementById('rg-email').value.trim();
+  const pass  = document.getElementById('rg-pass').value;
+  btn.disabled = true; btn.textContent = '...'; err.classList.remove('on');
+  const { error } = await sb.auth.signUp({ email, password: pass, options: { data: { display_name: name } } });
+  if (error) {
+    err.textContent = error.message.includes('already') ? 'Email già registrata.' : 'Errore registrazione.';
+    err.classList.add('on');
+    btn.disabled = false; btn.textContent = 'Crea account';
+  } else {
+    err.style.cssText = 'display:block;background:var(--green-l);border-color:rgba(16,185,129,.3);color:#86efac';
+    err.textContent = '✓ Controlla la tua email per confermare l\'account.';
+    btn.disabled = false; btn.textContent = 'Crea account';
+  }
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+}
+
+// ── HELPER ─────────────────────────────────────────────────
+const eur = v => new Intl.NumberFormat('it-IT', { style:'currency', currency:'EUR', maximumFractionDigits:0 }).format(v);
+const pct = v => v.toFixed(2) + '%';
+const getN = id => parseFloat(document.getElementById(id)?.value) || 0;
+const setV = (id, v, cls='') => { const el=document.getElementById(id); if(el){el.textContent=v; if(cls) el.className=cls} };
+
+function toast(msg, type='ok') {
+  const c = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('on'));
+  setTimeout(() => { t.classList.remove('on'); setTimeout(() => t.remove(), 300); }, 3500);
+}
+
+// ── MODE ───────────────────────────────────────────────────
+function setMode(m) {
+  mode = m;
+  document.getElementById('pill-rent').classList.toggle('on', m === 'rent');
+  document.getElementById('pill-flip').classList.toggle('on', m === 'flip');
+  document.getElementById('sec-rent').classList.toggle('hidden', m !== 'rent');
+  document.getElementById('sec-flip').classList.toggle('hidden', m !== 'flip');
+  document.getElementById('sec-sens').classList.toggle('hidden', m !== 'rent');
+  document.getElementById('res-rent').classList.toggle('hidden', m !== 'rent');
+  document.getElementById('res-flip').classList.toggle('hidden', m !== 'flip');
+  document.getElementById('k-cf-lbl').textContent = m === 'rent' ? 'Cashflow / Mese' : 'Profitto / Mese';
+  calc();
+}
+
+// ── TAX BUTTONS ────────────────────────────────────────────
+function setTax(rate, btn) {
+  document.getElementById('tax-rate').value = rate;
+  document.querySelectorAll('.tbtn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  calc();
+}
+
+// ── CORE CALC ──────────────────────────────────────────────
+// Formule identiche all'originale InvestPro v2.1
+function calc() {
+  const price = getN('price'), reno = getN('reno'), closing = getN('closing');
+  const ltv = getN('ltv'), rate = getN('rate'), years = getN('years');
+
+  // ── Finanziamento (uguale originale) ──────────────────
+  const loanAmt = price * (ltv / 100);
+  const equity  = price - loanAmt + reno + closing;
+  const mr = (rate / 100) / 12;
+  const np = years * 12;
+  const mp = mr > 0
+    ? loanAmt * (mr * Math.pow(1 + mr, np)) / (Math.pow(1 + mr, np) - 1)
+    : (np > 0 ? loanAmt / np : 0);
+
+  document.getElementById('mort-pay').value  = Math.round(mp).toLocaleString('it-IT');
+  document.getElementById('equity-req').value = Math.round(equity).toLocaleString('it-IT');
+
+  // KPI comuni
+  setV('k-invest', eur(equity));
+
+  if (mode === 'rent') calcRent(equity, mp);
+  else                  calcFlip(equity, mp);
+}
+
+function calcRent(equity, mp) {
+  // Stesse formule di updateRental() nell'originale
+  const adr     = getN('adr');
+  const occ     = getN('occ');
+  const taxR    = getN('tax-rate');
+  const otaPct  = getN('ota');
+  const fc      = getN('fixed');
+  const vc      = getN('varco');
+  const maint   = getN('maint');
+  const vac     = getN('vac');
+  const guests  = getN('guests');
+  const cityTax = getN('city-tax');
+
+  const nights   = 365 * (occ / 100);
+  const grossRev = adr * nights;
+  const otaCost  = grossRev * (otaPct / 100);
+  const ctCost   = guests * nights * cityTax;      // tassa soggiorno aggiuntiva
+  const fcAnn    = fc * 12;
+  const vcAnn    = vc * nights;
+  const maintAnn = maint * 12;
+  const vacCost  = grossRev * (vac / 100);
+  const totalOp  = otaCost + fcAnn + vcAnn + maintAnn + vacCost;
+  const taxes    = Math.max(0, (grossRev - totalOp) * (taxR / 100));
+  const mortAnn  = mp * 12;
+  const netInc   = grossRev - (totalOp + taxes + mortAnn);
+  const mCf      = netInc / 12;
+  const mol      = (grossRev - totalOp) / 12;
+  const coc      = equity > 0 ? (netInc / equity) * 100 : 0;
+  const nightly  = nights > 0 ? netInc / nights : 0;
+  const be       = netInc > 0 ? equity / netInc : null;
+
+  // Risultati
+  setV('r-gross',   eur(grossRev));
+  setV('r-ota',     eur(otaCost));
+  setV('r-citytax', eur(ctCost));
+  setV('r-op',      eur(fcAnn + vcAnn + maintAnn + vacCost));
+  setV('r-tax',     eur(taxes));
+  setV('r-mort',    eur(mortAnn));
+  setV('r-nights',  Math.round(nights) + ' notti');
+  setV('r-mol',     eur(mol));
+  setV('r-nightly', eur(nightly));
+
+  // Big cashflow
+  const cfEl  = document.getElementById('br-cf');
+  const bigEl = document.getElementById('big-cf');
+  cfEl.textContent = eur(mCf);
+  cfEl.className   = 'br-val ' + (mCf >= 0 ? 'pos' : 'neg');
+  bigEl.className  = 'big-result ' + (mCf < 0 ? 'neg' : '');
+  setV('br-cf-sub', `ROI ${pct(coc)} · Break-even ${be ? be.toFixed(1) + ' anni' : 'Mai'}`);
+
+  // KPI bar
+  setV('k-roi', pct(coc));
+  setV('k-cf',  eur(mCf));
+  document.getElementById('k-cf').className = 'kpi-v ' + (mCf >= 0 ? 'pos' : 'neg');
+  setV('k-be',  be ? be.toFixed(1) + ' anni' : 'Mai');
+
+  // Sensitivity (uguale originale updateSensitivity)
+  [{occ:50,id:'p',lbl:'worst'},{occ:65,id:'m',lbl:''},{occ:85,id:'o',lbl:'best'}].forEach(s => {
+    const n  = 365 * (s.occ / 100);
+    const gr = adr * n;
+    const op = gr * (otaPct/100) + fc*12 + vc*n + maint*12 + gr*(vac/100);
+    const tx = Math.max(0, (gr - op) * (taxR / 100));
+    const cf = (gr - op - tx - mp*12) / 12;
+    document.getElementById(`sens-${s.id}-occ`).textContent = s.occ + '% occ.';
+    const cfEl = document.getElementById(`sens-${s.id}-cf`);
+    cfEl.textContent = eur(cf);
+    cfEl.className   = 'sens-cf ' + (cf >= 0 ? 'pos' : 'neg');
+  });
+}
+
+function calcFlip(equity, mp) {
+  // Stesse formule di updateFlip() nell'originale
+  const price    = getN('price'), reno = getN('reno'), closing = getN('closing');
+  const flipP    = getN('flip-price');
+  const flipM    = getN('flip-months');
+  const flipAg   = getN('flip-ag');
+  const flipHold = getN('flip-hold');
+  const flipTax  = getN('flip-tax');
+
+  const agCost   = flipP * (flipAg / 100);
+  const holdCost = (mp + flipHold) * flipM;
+  const grossP   = flipP - price - reno - closing - agCost - holdCost;
+  const taxes    = Math.max(0, grossP * (flipTax / 100));
+  const netP     = grossP - taxes;
+  const roi      = equity > 0 ? (netP / equity) * 100 : 0;
+  const mProfit  = flipM > 0 ? netP / flipM : 0;
+
+  // Risultati
+  setV('f-sell',  eur(flipP));
+  setV('f-acq',   eur(price + reno + closing));
+  setV('f-ag',    eur(agCost));
+  setV('f-hold',  eur(holdCost));
+  setV('f-gross', eur(grossP));
+  setV('f-tax',   eur(taxes));
+
+  // Big flip
+  const bfEl  = document.getElementById('br-flip');
+  const bigFl = document.getElementById('big-flip');
+  bfEl.textContent = eur(netP);
+  bfEl.className   = 'br-val ' + (netP >= 0 ? 'pos' : 'neg');
+  bigFl.className  = 'big-result ' + (netP < 0 ? 'neg' : '');
+  setV('br-flip-sub', `ROI ${pct(roi)} · Durata ${flipM} mesi`);
+
+  // KPI bar
+  setV('k-roi', pct(roi));
+  setV('k-cf',  eur(mProfit));
+  document.getElementById('k-cf').className = 'kpi-v ' + (mProfit >= 0 ? 'pos' : 'neg');
+  setV('k-be',  flipM + ' mesi');
+}
+
+// ── SAVE / LOAD ────────────────────────────────────────────
+// Raccoglie tutti i valori dell'interfaccia in un oggetto
+function collectData() {
+  const ids = ['price','reno','closing','city-tax','ltv','rate','years','apprec',
+                'adr','occ','ota','guests','fixed','varco','maint','vac','tax-rate',
+                'flip-price','flip-months','flip-ag','flip-hold','flip-tax'];
+  const data = { mode, name: document.getElementById('proj-name').value };
+  ids.forEach(id => { const el = document.getElementById(id); if(el) data[id] = el.value; });
+  return data;
+}
+
+function restoreData(data) {
+  if (!data) return;
+  if (data.mode) setMode(data.mode);
+  if (data.name) document.getElementById('proj-name').value = data.name;
+  Object.entries(data).forEach(([k, v]) => {
+    const el = document.getElementById(k);
+    if (el && el.tagName === 'INPUT' && !el.readOnly) el.value = v;
+  });
+  calc();
+}
+
+async function saveProject() {
+  if (!currentUser) return;
+  const data = collectData();
+  const { error } = await sb.from('projects').upsert({
+    user_id: currentUser.id,
+    name: data.name,
+    data: data,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'user_id,name' });
+  if (error) toast('Errore nel salvataggio.', 'err');
+  else toast('✓ Progetto salvato.', 'ok');
+}
+
+// ── EXPORT EXCEL ───────────────────────────────────────────
+function exportExcel() {
+  const rows = [];
+  const name = document.getElementById('proj-name').value;
+
+  if (mode === 'rent') {
+    rows.push(['InvestPro — Analisi Affitto: ' + name]);
+    rows.push([]);
+    rows.push(['Parametro', 'Valore']);
+    [['Prezzo acquisto', getN('price')], ['Ristrutturazione', getN('reno')],
+     ['Costi notarili', getN('closing')], ['ADR', getN('adr')],
+     ['Occupazione %', getN('occ')], ['OTA %', getN('ota')],
+     ['Tassa soggiorno', getN('city-tax')], ['Costi fissi/mese', getN('fixed')],
+     ['Costi variabili/notte', getN('varco')], ['Manutenzione/mese', getN('maint')],
+     ['Vacancy %', getN('vac')], ['Aliquota fiscale %', getN('tax-rate')]
+    ].forEach(r => rows.push(r));
+    rows.push([]);
+    rows.push(['Ricavi lordi/anno', document.getElementById('r-gross').textContent]);
+    rows.push(['Cashflow mensile', document.getElementById('br-cf').textContent]);
+  } else {
+    rows.push(['InvestPro — Analisi Flip: ' + name]);
+    rows.push([]);
+    rows.push(['Prezzo acquisto', getN('price')]);
+    rows.push(['Prezzo vendita', getN('flip-price')]);
+    rows.push(['Profitto netto', document.getElementById('br-flip').textContent]);
+  }
+
+  // Crea CSV e scarica (fallback senza SheetJS)
+  const csv = rows.map(r => r.join('\t')).join('\n');
+  const blob = new Blob([csv], { type: 'text/tab-separated-values' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = name + '.tsv';
+  a.click(); URL.revokeObjectURL(url);
+  toast('Export scaricato.', 'ok');
+}
+
+// ── INIT ───────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  calc();
+  // Enter per login/reg
+  document.getElementById('li-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+  document.getElementById('rg-pass').addEventListener('keydown', e => { if(e.key==='Enter') doRegister(); });
+  // Ctrl+S salva
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey||e.metaKey) && e.key==='s') { e.preventDefault(); saveProject(); }
+  });
+});
+</script>
+
 </body>
 </html>
